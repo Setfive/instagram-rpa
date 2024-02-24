@@ -1,6 +1,7 @@
 import puppeteer from 'puppeteer';
 import * as fs from 'fs';
 import 'dotenv/config'
+import {SEARCH_BTN_SELECTOR, SEARCH_FIELD_SELECTOR, SEARCH_LINK} from "./selectors";
 
 (async () => {
   const INSTAGRAM_USERNAME = process.env.INSTAGRAM_USERNAME;
@@ -11,7 +12,7 @@ import 'dotenv/config'
     process.exit(-1);
   }
 
-  console.log(`Logging in with ${INSTAGRAM_USERNAME} and ${INSTAGRAM_PASSWORD}`);
+  console.log(`Logging in with ${INSTAGRAM_USERNAME}`);
 
   const browser = await puppeteer.launch({
     headless: false,
@@ -24,7 +25,7 @@ import 'dotenv/config'
 
   const page = await browser.newPage();
 
-  page.on("console", msg => console.log("PAGE LOG:", msg.text()));
+  // page.on("console", msg => console.log("PAGE LOG:", msg.text()));
 
   await page.goto('https://www.instagram.com/');
 
@@ -42,12 +43,34 @@ import 'dotenv/config'
 
   await loginButton.click()
 
-  await sleep(1);
+  await page.waitForNavigation({waitUntil: 'networkidle2'});
+
   const saveLoginBtn = await page.$('._acan');
   if(saveLoginBtn) {
+    console.log('Found saveLoginBtn');
     await saveLoginBtn.click();
+    await sleep(1);
   }
 
+  const noNotificationsBtn = await page.waitForSelector('._a9_1', {timeout: 30 * 1000});
+  console.log('Dismissing notifications button');
+  await noNotificationsBtn.click();
+
+  await sleep(1);
+
+  console.log('Waiting for search button...');
+  const searchBtn = await page.waitForSelector(SEARCH_BTN_SELECTOR, {timeout: 60 * 1000});
+  await searchBtn.click();
+
+  console.log('Waiting for search field...');
+  const searchField = await page.waitForSelector(SEARCH_FIELD_SELECTOR, {timeout: 30 * 1000});
+  await searchField.type('#bostonfoodies');
+  await sleep(3);
+
+  console.log('Waiting for search link...');
+  const searchLink = await page.waitForSelector(SEARCH_LINK, {timeout: 30 * 1000});
+  await searchLink.click();
+  
 })();
 
 async function sleep(time) {
