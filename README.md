@@ -46,3 +46,7 @@ To make this "useful", you could extend it to do things like:
 * Automatically Like or Comment on photos from specific accounts or tagged with specific hashtags
 * Use OpenAI/LLM to automatically message users personalized messages about photos they posted 
 * Monitor accounts and send alerts when they post
+
+## Demo video
+
+[![Watch demo video](https://img.youtube.com/vi/ntPdVX9ePe8/maxresdefault.jpg)](https://youtu.be/ntPdVX9ePe8)

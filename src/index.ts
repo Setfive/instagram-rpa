@@ -19,6 +19,7 @@ interface IPostData {
 }
 
 (async () => {
+
   const INSTAGRAM_USERNAME = process.env.INSTAGRAM_USERNAME;
   const INSTAGRAM_PASSWORD = process.env.INSTAGRAM_PASSWORD;
 
