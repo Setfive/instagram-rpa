@@ -165,6 +165,8 @@ interface IPostData {
   const messageSendBtn = await page.waitForSelector(MESSAGE_SEND_BTN, {timeout: 30 * 1000});
   await messageSendBtn.click();
 
+  await sleep(3);
+  process.exit(0);
 })();
 
 async function sleep(time) {
