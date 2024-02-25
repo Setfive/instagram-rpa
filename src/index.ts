@@ -1,14 +1,22 @@
 import puppeteer from 'puppeteer';
 import * as fs from 'fs';
+import { stringify } from 'csv-stringify/sync';
 import 'dotenv/config'
 import {
-  CLOSE_BTN, MESSAGE_BOX, MESSAGE_BTN, MESSAGE_SEND_BTN, NEXT_BTN,
+  CLOSE_BTN, LIKE_COUNT, MESSAGE_BOX, MESSAGE_BTN, MESSAGE_SEND_BTN, NEXT_BTN,
   PHOTO_GRID,
-  PHOTO_GRID_USERNAME, PHOTO_GRID_USERNAME_ONE, PHOTO_GRID_USERNAME_TWO,
+  PHOTO_GRID_USERNAME, PHOTO_GRID_USERNAME_ONE, PHOTO_GRID_USERNAME_TWO, POST_DATE,
   SEARCH_BTN_SELECTOR,
   SEARCH_FIELD_SELECTOR,
   SEARCH_LINK
 } from "./selectors";
+
+interface IPostData {
+  url: string,
+  usernames: string,
+  numLikes: number,
+  postDate: string
+}
 
 (async () => {
   const INSTAGRAM_USERNAME = process.env.INSTAGRAM_USERNAME;
@@ -81,19 +89,23 @@ import {
   console.log('Waiting for grid');
   await page.waitForSelector(PHOTO_GRID, {timeout: 30 * 1000});
   const photoGridDivs = await page.$$(PHOTO_GRID);
-  
-  const capturedUsernames: string[] = [];
+
+  const photoData: IPostData[] = [];
   console.log('Clicking photos...');
 
   const a = await photoGridDivs[0].$('a');
   await a.click();
 
   for(let i = 0; i < 25; i++) {
+    let postUsernames: string[] = [];
+    let likeCount = -1;
+    let postDate = '';
+    const pageUrl = page.url();
+
     try {
       const usernameAhref = await page.waitForSelector(PHOTO_GRID_USERNAME, {timeout: 1 * 1000});
       const username = await usernameAhref.evaluate(el => el.textContent, usernameAhref);
-      console.log(`username = ${username}`);
-      capturedUsernames.push(username);
+      postUsernames.push(username);
     }catch(e) {
       const usernameOneAhref = await page.waitForSelector(PHOTO_GRID_USERNAME_ONE, {timeout: 1 * 1000});
       const usernameOne = await usernameOneAhref.evaluate(el => el.textContent, usernameOneAhref);
@@ -101,11 +113,34 @@ import {
       const usernameTwoAhref = await page.waitForSelector(PHOTO_GRID_USERNAME_TWO, {timeout: 1 * 1000});
       const usernameTwo = await usernameTwoAhref.evaluate(el => el.textContent, usernameTwoAhref);
 
-      console.log(`usernameOne = ${usernameOne}, usernameTwo = ${usernameTwo}`);
-
-      capturedUsernames.push(usernameOne);
-      capturedUsernames.push(usernameTwo);
+      postUsernames.push(usernameOne);
+      postUsernames.push(usernameTwo);
     }
+
+    try {
+      const likeCountEl = await page.waitForSelector(LIKE_COUNT, {timeout: 1 * 1000});
+      const likeCountVal = await likeCountEl.evaluate(el => el.textContent, likeCountEl);
+      likeCount = parseInt(likeCountVal, 10);
+    }catch(e) {
+      console.error(e);
+    }
+
+    try {
+      const dateEl = await page.waitForSelector(POST_DATE, {timeout: 1 * 1000});
+      postDate = await dateEl.evaluate(el => el.getAttribute('datetime'), dateEl);
+    }catch(e) {
+      console.error(e);
+    }
+
+    const pd: IPostData = {
+      url: pageUrl,
+      usernames: postUsernames.join(', '),
+      numLikes: likeCount,
+      postDate: postDate
+    };
+    photoData.push(pd);
+
+    console.log(pd);
 
     await sleep(1);
 
@@ -115,9 +150,6 @@ import {
 
     await sleep(1);
   }
-
-  const capturedUsernamesSet = new Set<string>(capturedUsernames);
-  console.log(`Unique usernames = ${Array.from(capturedUsernamesSet).join(', ')}`);
 
   await page.goto('https://www.instagram.com/mradatta/');
 

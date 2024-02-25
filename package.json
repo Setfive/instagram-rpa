@@ -13,6 +13,7 @@
     "url": "https://github.com/Setfive/instagram-rpa.git"
   },
   "dependencies": {
+    "csv": "^6.3.6",
     "dotenv": "^16.4.5",
     "puppeteer": "^22.2.0",
     "tsx": "^4.7.1"
