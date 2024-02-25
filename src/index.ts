@@ -151,6 +151,9 @@ interface IPostData {
     await sleep(1);
   }
 
+  const csvData = stringify(photoData, {header: true});
+  fs.writeFileSync('photo_data.csv', csvData);
+
   await page.goto('https://www.instagram.com/mradatta/');
 
   const messageBtn = await page.waitForSelector(MESSAGE_BTN, {timeout: 30 * 1000});
