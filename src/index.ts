@@ -2,7 +2,7 @@ import puppeteer from 'puppeteer';
 import * as fs from 'fs';
 import 'dotenv/config'
 import {
-  CLOSE_BTN, NEXT_BTN,
+  CLOSE_BTN, MESSAGE_BOX, MESSAGE_BTN, MESSAGE_SEND_BTN, NEXT_BTN,
   PHOTO_GRID,
   PHOTO_GRID_USERNAME, PHOTO_GRID_USERNAME_ONE, PHOTO_GRID_USERNAME_TWO,
   SEARCH_BTN_SELECTOR,
@@ -81,14 +81,14 @@ import {
   console.log('Waiting for grid');
   await page.waitForSelector(PHOTO_GRID, {timeout: 30 * 1000});
   const photoGridDivs = await page.$$(PHOTO_GRID);
-
+  
   const capturedUsernames: string[] = [];
   console.log('Clicking photos...');
 
   const a = await photoGridDivs[0].$('a');
   await a.click();
 
-  for(let i = 0; i < 100; i++) {
+  for(let i = 0; i < 25; i++) {
     try {
       const usernameAhref = await page.waitForSelector(PHOTO_GRID_USERNAME, {timeout: 1 * 1000});
       const username = await usernameAhref.evaluate(el => el.textContent, usernameAhref);
@@ -115,6 +115,20 @@ import {
 
     await sleep(1);
   }
+
+  const capturedUsernamesSet = new Set<string>(capturedUsernames);
+  console.log(`Unique usernames = ${Array.from(capturedUsernamesSet).join(', ')}`);
+
+  await page.goto('https://www.instagram.com/mradatta/');
+
+  const messageBtn = await page.waitForSelector(MESSAGE_BTN, {timeout: 30 * 1000});
+  await messageBtn.click();
+
+  const messageTextBox = await page.waitForSelector(MESSAGE_BOX, {timeout: 30 * 1000});
+  await messageTextBox.type('Hello from the robot!');
+
+  const messageSendBtn = await page.waitForSelector(MESSAGE_SEND_BTN, {timeout: 30 * 1000});
+  await messageSendBtn.click();
 
 })();
 
